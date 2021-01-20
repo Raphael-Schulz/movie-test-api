@@ -1,3 +1,16 @@
 import Auth from "./auth";
-const typeDefs = [Auth];
+import Movie from "./movie";
+import MovieRating from "./movieRating";
+
+const typeDefs = `
+    type Query{
+        _empty: String
+    }
+    type Mutation {
+        _empty: String
+    }
+    ${Auth}
+    ${Movie}
+    ${MovieRating}
+`;
 export default typeDefs;

@@ -1,6 +1,7 @@
 import { Context, SaveMovieRatingResponse } from "../types";
 import { MovieModel, MovieRating, MovieRatingModel } from "../models";
 import { checkAuthentication } from "./auth";
+import { MOVIE_CHANGED, PUB_SUB } from "../constants";
 
 export async function saveMovieRating(
   _: void,
@@ -53,6 +54,14 @@ export async function saveMovieRating(
     { average_rating },
     { new: true },
   );
+
+  const notificationText = _id
+    ? "A rating for the move '" + movie?.name + "' was updated!"
+    : "A new rating for the movie '" + movie?.name + "' was added!";
+
+  PUB_SUB.publish(MOVIE_CHANGED, {
+    movieChanged: notificationText,
+  });
 
   return {
     movie: movie,

@@ -1,6 +1,7 @@
-import { currentUser, register, login, logout } from "./auth";
+import { currentUser, register, login } from "./auth";
 import { movies, addMovie, updateMovie, deleteMovie } from "./movie";
 import { saveMovieRating, movieRating } from "./movieRating";
+import { MOVIE_CHANGED, PUB_SUB } from "../constants";
 
 const resolverMap = {
   Query: {
@@ -10,12 +11,16 @@ const resolverMap = {
   },
   Mutation: {
     login,
-    logout,
     register,
     addMovie,
     updateMovie,
     deleteMovie,
     saveMovieRating,
+  },
+  Subscription: {
+    movieChanged: {
+      subscribe: () => PUB_SUB.asyncIterator([MOVIE_CHANGED]),
+    },
   },
 };
 

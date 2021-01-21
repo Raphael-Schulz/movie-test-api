@@ -9,6 +9,9 @@ const typeDefs = `
     type Mutation {
         _empty: String
     }
+    type Subscription{
+        _empty: String
+    }
     ${Auth}
     ${Movie}
     ${MovieRating}

@@ -1,18 +1,9 @@
 import mongoose from "mongoose";
 import yargs from "yargs";
-import { ApolloServer } from "apollo-server-express";
+import { ApolloServer } from "apollo-server";
 import { getUserInfo } from "./auth";
 import typeDefs from "./schema";
 import resolvers from "./resolvers";
-import express from "express";
-import cors from "cors";
-const cookieParser = require("cookie-parser");
-
-//Set correct server origin in production environment
-const corsOptions = {
-  origin: true,
-  credentials: true,
-};
 
 const args = yargs.option("mongo-uri", {
   describe: "Mongo URI",
@@ -33,20 +24,21 @@ async function start() {
     const server = await new ApolloServer({
       typeDefs,
       resolvers,
-      context: ({ req /*res*/ }) => ({
-        userInfo: getUserInfo(req.headers.authorization || ""),
-        /*userInfo: getUserInfo(req),
-        res: res,*/
+      subscriptions: {
+        onConnect: (connectionParams: any) => {
+          const user = getUserInfo(connectionParams.authorization || "");
+          if (!user) throw new Error("User not authenticated!");
+        },
+      },
+      context: ({ req }) => ({
+        userInfo: getUserInfo((req && req.headers.authorization) || ""),
       }),
     });
 
-    const app = express();
-    app.use(cors(corsOptions));
-    app.use(cookieParser());
-    server.applyMiddleware({ app, path: "/graphql", cors: corsOptions });
-
-    app.listen(3000);
-    console.log("GraphQl API running on port 3000.");
+    server.listen(3000).then(({ url, subscriptionsUrl }) => {
+      console.log(`Server ready at ${url}`);
+      console.log(`Subscriptions ready at ${subscriptionsUrl}`);
+    });
   } catch (err) {
     console.error(err);
     process.exit(1);

@@ -1,3 +1,4 @@
+import { MOVIE_CHANGED, PUB_SUB } from "../constants";
 import { Movie, MovieModel } from "../models";
 
 export async function movies(_: void, _args: any): Promise<Array<Movie>> {
@@ -21,6 +22,10 @@ export async function addMovie(_: void, _args: any): Promise<Movie | null> {
     release,
     duration,
     actors,
+  });
+
+  PUB_SUB.publish(MOVIE_CHANGED, {
+    movieChanged: "The movie '" + name + "' was added!",
   });
 
   return newMovie.save();
@@ -53,12 +58,21 @@ export async function updateMovie(_: void, _args: any): Promise<Movie | null> {
     },
   );
 
+  PUB_SUB.publish(MOVIE_CHANGED, {
+    movieChanged: "The movie '" + movie?.name + "' was updated!",
+  });
+
   return movie;
 }
 
 export async function deleteMovie(_: void, _args: any): Promise<Boolean> {
   const { _id } = _args;
 
-  if ((await MovieModel.deleteOne({ _id: _id })).deletedCount) return true;
-  else throw new Error("An Error occurred while deleting a movie!");
+  if ((await MovieModel.deleteOne({ _id: _id })).deletedCount) {
+    PUB_SUB.publish(MOVIE_CHANGED, {
+      movieChanged: "Movie Deleted!",
+    });
+
+    return true;
+  } else throw new Error("An Error occurred while deleting a movie!");
 }

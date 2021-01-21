@@ -17,7 +17,6 @@ const typeDef = `
     extend type Mutation {
         register(username: String!, password: String!): User!
         login(username: String!, password: String!): LoginResponse!
-        logout: String
     }    
 `;
 export default typeDef;

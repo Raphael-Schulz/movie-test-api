@@ -19,5 +19,9 @@ const typeDef = `
         updateMovie(_id: ID!, name: String!, release: Date!, duration: Int!, actors: String!): Movie!
         deleteMovie(_id: ID!): Boolean
     }    
+
+    extend type Subscription {
+        movieChanged: String!
+    }
 `;
 export default typeDef;

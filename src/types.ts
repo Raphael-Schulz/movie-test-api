@@ -21,3 +21,7 @@ export interface SaveMovieRatingResponse {
   movieRating: MovieRating | null;
   movie: Movie | null;
 }
+
+export interface Notification {
+  text: String;
+}

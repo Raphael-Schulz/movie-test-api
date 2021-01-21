@@ -2,6 +2,7 @@ import { Context, SaveMovieRatingResponse } from "../types";
 import { MovieModel, MovieRating, MovieRatingModel } from "../models";
 import { checkAuthentication } from "./auth";
 import { MOVIE_CHANGED, PUB_SUB } from "../constants";
+import { updateAverageRating } from "./movie";
 
 export async function saveMovieRating(
   _: void,
@@ -10,9 +11,16 @@ export async function saveMovieRating(
 ): Promise<SaveMovieRatingResponse> {
   await checkAuthentication(ctx);
   const { _id, movieId, rating } = _args;
-  const userId = ctx.userInfo.id;
+  const userId = ctx.userInfo && ctx.userInfo.id;
 
   let movieRating = null;
+  let movie = null;
+
+  try {
+    movie = await MovieModel.findById(movieId);
+  } catch {
+    throw new Error("Movie does not exist!");
+  }
 
   //If an ID is provided update the existing element if not create a new one
   if (_id) {
@@ -26,34 +34,11 @@ export async function saveMovieRating(
     await movieRating.save();
   }
 
-  //Calculate the new average_rating for the current movie
-  const aggregatedRatings = await MovieRatingModel.aggregate([
-    {
-      $match: {
-        movieId: {
-          $eq: movieId,
-        },
-      },
-    },
-    {
-      $group: {
-        _id: { _id: null },
-        ratings_sum: { $sum: "$rating" },
-        count: { $sum: 1 },
-      },
-    },
-  ]);
+  if (!movieRating) {
+    throw new Error("MovieRating could not be created!");
+  }
 
-  const average_rating = (
-    aggregatedRatings[0]["ratings_sum"] / aggregatedRatings[0]["count"]
-  ).toFixed(2);
-
-  //Update the average_rating for the current movie
-  const movie = await MovieModel.findOneAndUpdate(
-    { _id: movieId },
-    { average_rating },
-    { new: true },
-  );
+  movie = await updateAverageRating(movieId);
 
   const notificationText = _id
     ? "A rating for the move '" + movie?.name + "' was updated!"
@@ -76,10 +61,14 @@ export async function movieRating(
 ): Promise<MovieRating | null> {
   await checkAuthentication(ctx);
 
-  const movieRating = await MovieRatingModel.findOne({
-    movieId: _args.movieId,
-    userId: ctx.userInfo.id,
-  });
+  if (ctx.userInfo) {
+    const movieRating = await MovieRatingModel.findOne({
+      movieId: _args.movieId,
+      userId: ctx.userInfo.id,
+    });
 
-  return movieRating;
+    return movieRating;
+  }
+
+  return null;
 }

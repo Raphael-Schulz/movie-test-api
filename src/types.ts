@@ -1,4 +1,3 @@
-import { Response } from "express";
 import { Movie, MovieRating } from "./models";
 
 export interface RegisterResponse extends UserInfo {}
@@ -13,15 +12,10 @@ export interface UserInfo {
 }
 
 export interface Context {
-  userInfo: UserInfo;
-  res: Response;
+  userInfo: UserInfo | null;
 }
 
 export interface SaveMovieRatingResponse {
-  movieRating: MovieRating | null;
-  movie: Movie | null;
-}
-
-export interface Notification {
-  text: String;
+  movieRating: MovieRating;
+  movie: Movie;
 }
